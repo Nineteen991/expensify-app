@@ -1,4 +1,8 @@
 const path = require('path')
+// yarn add mini-css-extract-plugin
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+// yarn add extract-text-webpack-plugin
+// const ExtractTextPlugin = require('extract-text-webpack-plugin')
 
 // entry -> output
 
@@ -9,7 +13,12 @@ const path = require('path')
 // make sure dependencies are updated
 // yarn add @babel/core babel-loader @babel/preset-env @babel/preset-react
 
-module.exports = {
+module.exports = (env) => {
+  const isProduction = env === 'production'
+  const CSSExtract = new MiniCssExtractPlugin({ filename: 'styles.css' })
+  // const CSSExtract = new ExtractTextPlugin('styles.css')
+
+  return {
     entry: './src/app.js',
     output: {
         // joins the directory path with public folder at the end
@@ -24,15 +33,37 @@ module.exports = {
         }, {
             test: /\.s?css$/,
             use: [
-                'style-loader',
-                'css-loader',
-                'sass-loader'
-            ]
+    					{
+    						loader: MiniCssExtractPlugin.loader
+    					},
+    					{
+    						loader: 'css-loader',
+    						options: {
+    							sourceMap: true
+    						}
+    					},
+    					{
+    						loader: 'sass-loader',
+    						options: {
+    							sourceMap: true
+    						}
+    					}
+    				]
+            // use: CSSExtract.extract({
+            //   use: [
+            //     'css-loader',
+            //     'sass-loader'
+            //   ]
+            // })
         }]
     },
-    devtool: 'cheap-module-eval-source-map',
+    plugins: [
+      CSSExtract
+    ],
+    devtool: isProduction ? 'source-map' : 'inline-source-map',
     devServer: {
         contentBase: path.join(__dirname, 'public'),
         historyApiFallback: true // keep using index.html for client side rendering
     }
+  }
 }
